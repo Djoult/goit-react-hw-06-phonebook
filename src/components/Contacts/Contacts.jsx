@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { RxAvatar } from 'react-icons/rx';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import {
@@ -9,11 +8,29 @@ import {
   SpanNumber,
   ButtonDlt,
 } from './Contacts.styled';
+import { useDispatch, useSelector } from 'react-redux';
+import { removeContact } from 'redux/contactsSlice';
+import { getContacts, getFilter } from 'redux/selectors';
 
-function Contacts({ contacts, onDeleteContact }) {
+export const Contacts = () => {
+  const contacts = useSelector(getContacts);
+  const filter = useSelector(getFilter);
+  const dispatch = useDispatch();
+
+  const getVisibleContacts = (() => {
+    return contacts
+      .filter(
+        contact =>
+          contact.name.toLowerCase().includes(filter.toLowerCase()) ||
+          contact.number.includes(filter.toLowerCase())
+      )
+      .sort((firstContact, secondContact) =>
+        firstContact.name.localeCompare(secondContact.name)
+      );
+  })();
   return (
     <UlList>
-      {contacts.map(({ id, name, number }) => {
+      {getVisibleContacts.map(({ id, name, number }) => {
         return (
           <LiItem key={id}>
             <SpanIcon
@@ -25,7 +42,10 @@ function Contacts({ contacts, onDeleteContact }) {
             </SpanIcon>
             <SpanName>{name}</SpanName>
             <SpanNumber>{number}</SpanNumber>
-            <ButtonDlt type="button" onClick={() => onDeleteContact(id)}>
+            <ButtonDlt
+              type="button"
+              onClick={() => dispatch(removeContact(id))}
+            >
               <RiDeleteBin6Line />
             </ButtonDlt>
           </LiItem>
@@ -33,17 +53,4 @@ function Contacts({ contacts, onDeleteContact }) {
       })}
     </UlList>
   );
-}
-
-Contacts.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    }).isRequired
-  ).isRequired,
-  onDeleteContact: PropTypes.func,
 };
-
-export default Contacts;
